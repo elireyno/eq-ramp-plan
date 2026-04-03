@@ -452,6 +452,12 @@ function save(){
     }
   }catch(e){}
 }
+function saveFaqs(){
+  try{localStorage.setItem("eq-faqs",JSON.stringify(FAQS));}catch(e){}
+}
+function loadFaqs(){
+  try{var f=localStorage.getItem("eq-faqs");if(f){var parsed=JSON.parse(f);if(parsed&&parsed.length){FAQS.length=0;parsed.forEach(function(item){FAQS.push(item);});}}}catch(e){}
+}
 // ====== HELPERS ======
 function h(tag,attrs){var kids=Array.prototype.slice.call(arguments,2);var el=document.createElement(tag);if(attrs){Object.keys(attrs).forEach(function(k){var v=attrs[k];if(k==="style"&&typeof v==="object")Object.assign(el.style,v);else if(k.indexOf("on")===0)el.addEventListener(k.slice(2).toLowerCase(),v);else if(k==="className")el.className=v;else el.setAttribute(k,v);});}
 function addKids(arr){arr.forEach(function(c){if(c==null)return;if(Array.isArray(c))addKids(c);else el.appendChild(typeof c==="string"?document.createTextNode(c):c);});}
@@ -737,6 +743,36 @@ function showBulkDateModal(){
   var ov=showOverlay(modal);
 }
 
+// ====== FAQ EDIT MODAL ======
+function showFaqEditModal(index){
+  var isNew=index===-1;
+  var f=isNew?{q:"",a:""}:{q:FAQS[index].q,a:FAQS[index].a};
+  var t=theme();
+  var qInp=h("textarea",{style:{width:"100%",padding:"8px 10px",borderRadius:"8px",border:"1px solid #e2e8f0",fontSize:"13px",minHeight:"50px",resize:"vertical",outline:"none",boxSizing:"border-box"}});
+  qInp.value=f.q;qInp.addEventListener("input",function(e){f.q=e.target.value;});
+  var aInp=h("textarea",{style:{width:"100%",padding:"8px 10px",borderRadius:"8px",border:"1px solid #e2e8f0",fontSize:"13px",minHeight:"80px",resize:"vertical",outline:"none",boxSizing:"border-box"}});
+  aInp.value=f.a;aInp.addEventListener("input",function(e){f.a=e.target.value;});
+  var btns=[h("button",{className:"btn-cancel",onClick:function(){ov.remove();}})];
+  btns[0].textContent="Cancel";
+  if(!isNew){btns.push(h("button",{className:"btn-danger",style:{padding:"8px 16px"},onClick:function(){FAQS.splice(index,1);saveFaqs();ov.remove();render();}},"Delete"));}
+  btns.push(h("button",{className:"btn-primary",style:{background:t.accent},onClick:function(){
+    if(!f.q.trim()){ov.remove();return;}
+    if(isNew){FAQS.push({q:f.q.trim(),a:f.a.trim()});}
+    else{FAQS[index]={q:f.q.trim(),a:f.a.trim()};}
+    saveFaqs();ov.remove();render();
+  }},isNew?"Add":"Save"));
+  var modal=h("div",{className:"modal",onClick:function(e){e.stopPropagation();},style:{maxWidth:"460px"}},
+    h("h3",null,isNew?"\u2753 Add FAQ":"\u2753 Edit FAQ"),
+    h("label",{style:{fontSize:"11px",fontWeight:"600",color:"#64748b",display:"block",margin:"0 0 3px"}},"Question"),
+    qInp,
+    h("label",{style:{fontSize:"11px",fontWeight:"600",color:"#64748b",display:"block",margin:"12px 0 3px"}},"Answer"),
+    aInp,
+    h("div",{className:"modal-btns"},btns)
+  );
+  var ov=showOverlay(modal);
+  setTimeout(function(){qInp.focus();},100);
+}
+
 // ====== EXPORT & PUBLISH ======
 function exportPublish(){
   var msg=document.getElementById("export-msg");
@@ -836,7 +872,28 @@ app.appendChild(h("div",{className:"view-btns"},["checklist","upcoming","courses
 app.appendChild(h("div",{className:"progress-box",style:{background:t.grad}},h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}},h("span",{style:{fontWeight:"700",fontSize:"13px"}},"Overall Progress"),h("span",{style:{fontWeight:"800",fontSize:"20px",color:pct===100?"#10b981":t.accent}},pct+"%")),h("div",{className:"progress-track",style:{height:"8px"}},h("div",{className:"progress-fill",style:{width:pct+"%",background:pct===100?"#10b981":t.accent}})),h("div",{style:{display:"flex",justifyContent:"space-between",marginTop:"5px",fontSize:"11px",color:"#64748b"}},h("span",null,doneT+"/"+totalT),h("span",null,(totalT-doneT)+" left"))));
 app.appendChild(h("div",{className:"filter-row"},h("span",{style:{fontSize:"10px",fontWeight:"600",color:"#94a3b8"}},"FILTER:"),owners.map(function(o){return h("button",{className:"filter-btn",style:state.filter===o?{borderColor:t.accent,background:t.accent,color:"white"}:{},onClick:function(){state.filter=o;render();}},o);})));
 if(state.view==="upcoming"){var up=c.tasks.filter(function(x){return !c.done[x.id];}).sort(function(a,b){return (a.dueDate||"").localeCompare(b.dueDate||"");}).slice(0,6);app.appendChild(h("div",{className:"upcoming"},h("h3",{style:{margin:"0 0 8px",fontSize:"14px",fontWeight:"700"}},"\u26A1 Next Up"),up.map(function(x,i){var ph=c.phases.find(function(p){return p.id===x.phaseId;});return h("div",{style:{display:"flex",alignItems:"center",gap:"8px",padding:"6px 0",borderBottom:"1px solid #fde68a"}},h("div",{style:{width:"20px",height:"20px",borderRadius:"50%",background:ph?ph.color:"#ccc",color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"9px",fontWeight:"800",flexShrink:"0"}},""+(i+1)),h("div",{style:{flex:"1"}},h("div",{style:{fontSize:"12px",fontWeight:"500"}},x.text),h("div",{style:{fontSize:"10px",color:"#92400e"}},"Due "+fmtD(x.dueDate)+" \u00B7 "+x.owner)),pill(PC[x.priority],x.priority));})));}
-if(state.view==="faq"){FAQS.forEach(function(f,i){var body=h("div",{className:"faq-body"+(state.faqO===i?" show":"")},f.a);var btn=h("button",{className:"faq-btn"+(state.faqO===i?" open":""),onClick:function(){state.faqO=state.faqO===i?null:i;render();}},f.q,h("span",{style:{transform:state.faqO===i?"rotate(180deg)":"rotate(0)",transition:"transform .2s",display:"inline-block"}},"\u25BE"));app.appendChild(h("div",{className:"faq-item"},btn,body));});}
+if(state.view==="faq"){
+  FAQS.forEach(function(f,i){
+    var body=h("div",{className:"faq-body"+(state.faqO===i?" show":"")},f.a);
+    var btn=h("button",{className:"faq-btn"+(state.faqO===i?" open":""),style:{flex:"1"},onClick:function(){state.faqO=state.faqO===i?null:i;render();}},
+      f.q,
+      h("span",{style:{transform:state.faqO===i?"rotate(180deg)":"rotate(0)",transition:"transform .2s",display:"inline-block"}},"\u25BE")
+    );
+    var headRow=h("div",{style:{display:"flex",alignItems:"center"}},btn);
+    if(isAdmin){
+      headRow.appendChild(h("div",{style:{display:"flex",gap:"2px",padding:"0 6px",flexShrink:"0"}},
+        h("button",{style:{padding:"3px 5px",border:"none",background:"none",fontSize:"11px",color:"#94a3b8"},title:"Move up",onClick:function(e){e.stopPropagation();if(i>0){var tmp=FAQS[i];FAQS[i]=FAQS[i-1];FAQS[i-1]=tmp;saveFaqs();render();}}},"\u2191"),
+        h("button",{style:{padding:"3px 5px",border:"none",background:"none",fontSize:"11px",color:"#94a3b8"},title:"Move down",onClick:function(e){e.stopPropagation();if(i<FAQS.length-1){var tmp=FAQS[i];FAQS[i]=FAQS[i+1];FAQS[i+1]=tmp;saveFaqs();render();}}},"\u2193"),
+        h("button",{style:{padding:"3px 5px",border:"none",background:"none",fontSize:"11px",color:t.accent},title:"Edit",onClick:function(e){e.stopPropagation();showFaqEditModal(i);}},"\u270F\uFE0F"),
+        h("button",{style:{padding:"3px 5px",border:"none",background:"none",fontSize:"11px",color:"#ef4444"},title:"Delete",onClick:function(e){e.stopPropagation();if(confirm("Delete this FAQ?")){FAQS.splice(i,1);saveFaqs();render();}}},"\u{1F5D1}")
+      ));
+    }
+    app.appendChild(h("div",{className:"faq-item"},headRow,body));
+  });
+  if(isAdmin){
+    app.appendChild(h("button",{style:{marginTop:"6px",padding:"8px",borderRadius:"8px",border:"1px dashed "+t.border,background:t.light,color:t.accent,fontSize:"12px",fontWeight:"700",width:"100%"},onClick:function(){showFaqEditModal(-1);}},"\u2795 Add FAQ Entry"));
+  }
+}
 if(state.view==="courses"){
   app.appendChild(h("div",{style:{marginBottom:"12px"}},
     h("h2",{style:{fontSize:"18px",fontWeight:"800",margin:"0 0 4px"}},"\u{1F393} Grow With Gusto \u2014 CX Academy Courses"),
@@ -973,7 +1030,7 @@ if(isAdmin)body.appendChild(h("button",{style:{marginTop:"6px",padding:"7px",bor
 phaseEl.appendChild(body);}app.appendChild(phaseEl);});}
 app.appendChild(h("div",{className:"footer"},pct===100?"\u{1F389} "+t.label+" Ramp complete!":pct+"% \u00B7 \u{1F4BE} Auto-saves \u00B7 \u{1F512} Admin PIN to edit \u00B7 \u{1F4C5} Click dates to adjust"));
 }
-load();render();
+load();loadFaqs();render();
 </script>
 </body>
 </html>
