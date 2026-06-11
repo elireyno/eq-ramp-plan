@@ -831,7 +831,20 @@ app.appendChild(h("div",{style:{marginTop:"8px",display:"flex",gap:"8px"}},(func
 app.appendChild(h("button",{style:{marginTop:"8px",padding:"10px",borderRadius:"8px",border:"1px solid #e2e8f0",background:"white",color:"#64748b",fontSize:"12px",fontWeight:"600",width:"100%"},onClick:function(){state.view="checklist";render();}},"\u2190 Back to Checklist"));}
 }
 // Checklist
-if(state.view==="checklist"){c.phases.forEach(function(ph){
+if(state.view==="checklist"){
+app.appendChild(h("div",{style:{background:"linear-gradient(135deg,#fef3c7,#fff7ed)",border:"2px solid #f59e0b",borderRadius:"12px",padding:"14px 16px",marginBottom:"14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px",flexWrap:"wrap"}},
+  h("div",{style:{display:"flex",alignItems:"center",gap:"10px",flex:"1",minWidth:"0"}},
+    h("div",{style:{fontSize:"28px",flexShrink:"0"}},"\u{1F4CB}"),
+    h("div",null,
+      h("div",{style:{fontWeight:"800",fontSize:"13px",color:"#92400e",marginBottom:"2px"}},"📌 Start Here — The Stages of EQ Training"),
+      h("div",{style:{fontSize:"12px",color:"#a16207",lineHeight:"1.4"}},"Before diving into tasks, read through the EQ training stages overview. It explains what to expect at each phase of your ramp.")
+    )
+  ),
+  h("a",{href:"https://share-some-html.staging.zp-int.com/ginger-calm-otter",target:"_blank",rel:"noopener noreferrer",style:{display:"inline-flex",alignItems:"center",gap:"6px",padding:"9px 16px",borderRadius:"8px",background:"#f59e0b",color:"white",fontWeight:"700",fontSize:"12px",textDecoration:"none",flexShrink:"0",whiteSpace:"nowrap"}},
+    "\u{1F517} View Stages of EQ Training"
+  )
+));
+c.phases.forEach(function(ph){
 var open=state.openP[ph.id];var pp=pPct(ph.id);var st=pSt(ph.id);var ts=getPT(ph.id);var ft=state.filter==="All"?ts:ts.filter(function(x){return x.owner===state.filter;});if(state.filter!=="All"&&!ft.length)return;
 var phaseEl=h("div",{className:"phase"});var headRow=h("div",{className:"phase-head"});
 headRow.appendChild(h("button",{className:"phase-toggle"+(st==="Complete"?" complete":""),onClick:function(){state.openP[ph.id]=!state.openP[ph.id];render();}},h("div",{className:"phase-bar",style:{background:ph.color}}),h("div",{style:{flex:"1"}},h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},h("div",null,h("span",{style:{fontWeight:"700",fontSize:"13px"}},ph.icon+" "+ph.name),h("span",{style:{fontSize:"11px",color:"#94a3b8",marginLeft:"6px"}},ph.weeks)),h("div",{style:{display:"flex",alignItems:"center",gap:"6px"}},pill(stC(st),st),h("span",{style:{fontSize:"11px",fontWeight:"700",color:ph.color}},pp+"%"),h("span",{style:{transform:open?"rotate(180deg)":"rotate(0)",transition:"transform .25s",fontSize:"12px",color:"#94a3b8",display:"inline-block"}},"\u25BE"))),h("div",{className:"progress-track",style:{marginTop:"4px",height:"3px"}},h("div",{className:"progress-fill",style:{width:pp+"%",background:ph.color}})))));
